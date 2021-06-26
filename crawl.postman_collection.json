@@ -1,0 +1,251 @@
+{
+	"info": {
+		"_postman_id": "f9ad1da7-7203-43f8-a58b-2c420de6e5bf",
+		"name": "crawl",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get_schools",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var currid = pm.environment.get(\"curridlocal\");\r",
+							"\r",
+							"if(!currid){\r",
+							"    currid = 0;\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var currid = pm.environment.get(\"curridlocal\");\r",
+							"pm.environment.set(\"currid\", parseInt(currid));\r",
+							"pm.environment.set(\"curridlocal\", parseInt(currid) + 1);\r",
+							"pm.environment.set(\"currListItem\", 0);\r",
+							"\r",
+							"\r",
+							"var jsonData = pm.response.json()\r",
+							"pm.environment.set(\"currschjson\", jsonData.items);\r",
+							"\r",
+							"postman.setNextRequest('get_children');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cookie",
+						"type": "text",
+						"value": ".AUTH={{.AUTH}};"
+					}
+				],
+				"url": {
+					"raw": "https://www.yaklass.ru/ajax/Children/SchoolClassLookupAjax?schoolId={{currid}}",
+					"protocol": "https",
+					"host": [
+						"www",
+						"yaklass",
+						"ru"
+					],
+					"path": [
+						"ajax",
+						"Children",
+						"SchoolClassLookupAjax"
+					],
+					"query": [
+						{
+							"key": "schoolId",
+							"value": "{{currid}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_children",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var currschjson = pm.environment.get(\"currschjson\");\r",
+							"\r",
+							"var currListItem = pm.environment.get(\"currListItem\");\r",
+							"\r",
+							"if(!currListItem){\r",
+							"    currListItem = 0;\r",
+							"}\r",
+							"\r",
+							"if (Object.keys(currschjson).length !== 0){\r",
+							"    var currclassenc = currschjson[currListItem].id.replace(/\\+/g, \"%2B\");\r",
+							"    pm.environment.set(\"currclassenc\", currclassenc);\r",
+							"\r",
+							"    pm.environment.set(\"currListItem\", parseInt(currListItem) + 1);\r",
+							"}else{\r",
+							"    pm.environment.set(\"currclassenc\", 0);\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.environment.set(\"currPlJson\", jsonData.items);\r",
+							"\r",
+							"if (Object.keys(jsonData.items).length == 0){\r",
+							"postman.setNextRequest('get_children');\r",
+							"}else{\r",
+							"postman.setNextRequest('crawl_class');\r",
+							"}\r",
+							"\r",
+							"\r",
+							"var currschjson = pm.environment.get(\"currschjson\");\r",
+							"\r",
+							"var currListItem = pm.environment.get(\"currListItem\");\r",
+							"\r",
+							"if (Object.keys(currschjson).length <= currListItem){\r",
+							"    postman.setNextRequest('get_schools');\r",
+							"    pm.environment.set(\"currListItem\", 0);\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cookie",
+						"type": "text",
+						"value": ".AUTH={{.AUTH}};"
+					}
+				],
+				"url": {
+					"raw": "https://www.yaklass.ru/ajax/Children/FindChildBySchoolAjax?schoolId={{currid}}&classIdEnc={{currclassenc}}",
+					"protocol": "https",
+					"host": [
+						"www",
+						"yaklass",
+						"ru"
+					],
+					"path": [
+						"ajax",
+						"Children",
+						"FindChildBySchoolAjax"
+					],
+					"query": [
+						{
+							"key": "schoolId",
+							"value": "{{currid}}"
+						},
+						{
+							"key": "classIdEnc",
+							"value": "{{currclassenc}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "crawl_class",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var currPlJson = pm.environment.get(\"currPlJson\");\r",
+							"\r",
+							"var currPlItem = pm.environment.get(\"currPlItem\");\r",
+							"\r",
+							"if(!currPlItem){\r",
+							"    currPlItem = 0;\r",
+							"}\r",
+							"\r",
+							"if (Object.keys(currPlJson).length !== 0){\r",
+							"    var uid = currPlJson[currPlItem].guid;\r",
+							"    pm.environment.set(\"uid\", uid);\r",
+							"    pm.environment.set(\"currPlItem\", parseInt(currPlItem) + 1);\r",
+							"}else{\r",
+							"    pm.environment.set(\"uid\", 0);\r",
+							"}\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"postman.setNextRequest('crawl_class');\r",
+							"\r",
+							"var currPlJson = pm.environment.get(\"currPlJson\");\r",
+							"\r",
+							"var currPlItem = pm.environment.get(\"currPlItem\");\r",
+							"\r",
+							"if (Object.keys(currPlJson).length <= currPlItem){\r",
+							"    postman.setNextRequest('get_children');\r",
+							"    pm.environment.set(\"currPlItem\", 0);\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Cookie",
+						"value": ".AUTH={{.AUTH}};",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://www.yaklass.ru/ajax/children/RequestParentIdentificationAjax?uid={{uid}}",
+					"protocol": "https",
+					"host": [
+						"www",
+						"yaklass",
+						"ru"
+					],
+					"path": [
+						"ajax",
+						"children",
+						"RequestParentIdentificationAjax"
+					],
+					"query": [
+						{
+							"key": "uid",
+							"value": "{{uid}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
